@@ -45,9 +45,11 @@ function testMinecraftConnectionWithRetry(interaction) {
     tryConnect();
 }
 
-client.once('ready', () => {
+const onReady = () => {
     console.log(`Logged in as ${client.user.tag}!`);
-});
+}
+
+client.once('ready', onReady);
 
 client.on('interactionCreate', async interaction => {
     if (!interaction.isCommand()) return;
