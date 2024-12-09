@@ -2,98 +2,98 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const { exec } = require('child_process');
 const net = require('net');
 require('dotenv').config();
-
-const SERVER_IP = '10.0.0.56'; // Local Server IP
-const PORT = 25565; // Default Minecraft port
-const TIMEOUT = 60000; // Timeout in milliseconds
-const RETRY_INTERVAL = 10000; // Interval between retries in milliseconds (1 second)
-const MAX_RETRIES = Math.floor(TIMEOUT / RETRY_INTERVAL); // Maximum number of retries based on total timeout
-const TMUX_SESSION = 'minecraft';
+const {
+    SERVER_IP, PORT, RETRY_INTERVAL,
+    MAX_RETRIES, TMUX_SESSION, START_SERVER_SCRIPT_PATH,
+} = require('./constants.js');
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-function testMinecraftConnectionWithRetry(interaction) {
+const execCommand = command => {
+    const handleCommandResult = (resolve, reject) => (error, stdout, stderr) => {
+        if (error) reject(stderr || error.message);
+        else resolve(stdout.trim());
+    };
+    const runCommand = (resolve, reject) => exec(command, handleCommandResult  (resolve, reject));
+    const commandPromise = new Promise(runCommand );
+    return commandPromise;
+};
+const testServerConnectionWithRetry = interaction => {
     let attempt = 0;
-
     const tryConnect = () => {
-	const socket = new net.Socket();
-
-	const onConnect = () => {
-       	   socket.end();
-           interaction.followUp('Server is up');
-    	};
-    	const reconnect = () => {
-           socket.destroy();
-           interaction.followUp(`Attempt ${attempt + 1} failed: Timeout.`);
-           attempt++;
-
-           if (attempt < MAX_RETRIES) {
-              interaction.followUp(`Retrying in ${RETRY_INTERVAL / 1000} seconds...`);
-              setTimeout(tryConnect, RETRY_INTERVAL);
-           } else {
-              interaction.followUp('Reached maximum retries. Server is not reachable.');
-       	   }
-    	};
-
+        const socket = new net.Socket();
+        const onConnect = () => {
+            socket.end();
+            interaction.followUp('Server is up');
+        };
+        const reconnect = () => {
+            socket.destroy();
+            attempt++;
+            interaction.followUp(`Attempt ${attempt} failed. Retrying in ${RETRY_INTERVAL / 1000} seconds...`);
+            if (attempt < MAX_RETRIES) setTimeout(tryConnect, RETRY_INTERVAL);
+            else interaction.followUp('Maximum retries reached. Server is not reachable.');
+        };
         socket.setTimeout(RETRY_INTERVAL);
-	socket.on('connect', onConnect);
-	socket.on('timeout', reconnect);
+        socket.on('connect', onConnect);
+        socket.on('timeout', reconnect);
         socket.on('error', reconnect);
         socket.connect(PORT, SERVER_IP);
     }
-
     tryConnect();
 }
-
 const onReady = () => {
     console.log(`Logged in as ${client.user.tag}!`);
 }
 
-client.once('ready', onReady);
-
-client.on('interactionCreate', async interaction => {
+const startServer = async interaction => {
+    await interaction.reply('Starting the server...');
+    const startCommand = `tmux new-session -d -s ${TMUX_SESSION} 'bash ${START_SERVER_SCRIPT_PATH}'`;
+    try {
+        await execCommand(startCommand);
+        interaction.followUp('Server is starting! 🚀 Checking for connection...');
+        testServerConnectionWithRetry(interaction);
+    } catch (error) {
+        interaction.followUp('Failed to start the server. Please check the logs for details.');
+        console.error(`Error starting server: ${error}`);
+    }
+}
+const forceCloseServer = async interaction => {
+    const ctrlCCommand = `tmux send-keys -t ${TMUX_SESSION} C-c`;
+    try {
+        await execCommand(ctrlCCommand);
+        interaction.followUp('Server has been stopped successfully. 👌');
+    } catch (error) {
+        interaction.followUp('Failed to terminate the server session.');
+        console.error(`Error sending Ctrl+C: ${ctrlCError.message}`);
+    }
+}
+const stopServer = async interaction => {
+    await interaction.reply('Stopping the server...');
+    const stopCommand = `tmux send-keys -t ${TMUX_SESSION} "stop" Enter`;
+    const forceCloseServerHelper = () => forceCloseServer(interaction);
+    try {
+        await execCommand(stopCommand);
+        setTimeout(forceCloseServerHelper, 5000);
+    } catch (error) {
+        interaction.followUp('Failed to send stop command to the server.');
+        console.error(`Error sending stop command: ${error}`);
+    }
+}
+const handleInteractions = async interaction => {
     if (!interaction.isCommand()) return;
-
     const { commandName } = interaction;
-
-    if (commandName === 'startserver') {
-        await interaction.reply('Starting server...');
-	const command = `tmux new-session -d -s ${TMUX_SESSION} 'bash ~/Servers/ATM10/startserver.sh'`
-        exec(command, (error, stdout, stderr) => {
-            if (error) {
-                console.error(`Error starting server: ${error.message}`);
-                interaction.editReply('Failed to start the server.');
-                return;
-            }
-
-            console.log(`Server output: ${stdout}`);
-            interaction.followUp('Server is starting!');
-	    (async () => {
-		interaction.followUp('Checking for connection...');
-            	testMinecraftConnectionWithRetry(interaction);
-	    })();
-        });
+    switch (commandName) {
+        case 'startserver':
+            await startServer(interaction);
+            break;
+        case 'stopserver':
+            await stopServer(interaction);
+            break;
+        default:
+            interaction.reply('Unknown command!');
     }
-    if (commandName === 'stopserver') {
-	await interaction.reply('Stopping server...');
-	exec(`tmux send-keys -t ${TMUX_SESSION} "stop" Enter`, async (error, stdout, stderr) => {
-           if (error) {
-              interaction.followUp(`Error stopping the server: ${stderr}`);
-              return;
-           }
- 	   setTimeout(() => {
-              exec(`tmux send-keys -t ${TMUX_SESSION} C-c`, async (ctrlCError, ctrlCStdout, ctrlCStderr) => {
-                 if (ctrlCError) {
-                    console.error(`Error sending Ctrl+C: ${ctrlCStderr}`);
-                    interaction.followUp('Server failed to stop.');
-		    return;
-                 }
-                 interaction.followUp('Server has been stopped successfully.');
-		 return;
-              });
-           }, 5000);
-    	});
-    }
-});
+}
 
+client.once('ready', onReady);
+client.on('interactionCreate', handleInteractions);
 client.login(process.env.BOT_TOKEN);
