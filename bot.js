@@ -5,7 +5,7 @@ require('dotenv').config();
 const {
     SERVER_IP, PORT, RETRY_INTERVAL,
     MAX_RETRIES, TMUX_SESSION, START_SERVER_SCRIPT_PATH,
-} = require('./constants.js');
+} = require('./botConfigs.js');
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
