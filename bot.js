@@ -18,27 +18,40 @@ const execCommand = command => {
     const commandPromise = new Promise(runCommand );
     return commandPromise;
 };
+const testServerConnection = interaction => {
+    const socket = new net.Socket();
+
+    const onSocketConnection = () => {
+        socket.end();
+        interaction.followUp('Server is up');
+    };
+
+    socket.on('connect', onSocketConnection);
+    socket.connect(PORT, SERVER_IP);
+
+    return socket;
+};
 const testServerConnectionWithRetry = interaction => {
     let attempt = 0;
-    const tryConnect = () => {
-        const socket = new net.Socket();
-        const onConnect = () => {
-            socket.end();
-            interaction.followUp('Server is up');
-        };
-        const reconnect = () => {
-            socket.destroy();
-            attempt++;
-            interaction.followUp(`Attempt ${attempt} failed. Retrying in ${RETRY_INTERVAL / 1000} seconds...`);
-            if (attempt < MAX_RETRIES) setTimeout(tryConnect, RETRY_INTERVAL);
-            else interaction.followUp('Maximum retries reached. Server is not reachable.');
-        };
+
+    const handleSocketReconnection = socket => {
+        socket.destroy();
+        attempt++;
+        interaction.followUp(`Attempt ${attempt} failed. Retrying in ${RETRY_INTERVAL / 1000} seconds...`);
+        if (attempt < MAX_RETRIES) setTimeout(tryConnect, RETRY_INTERVAL);
+        else interaction.followUp('Maximum retries reached. Server is not reachable.');
+    };
+    const retryServerConnection = socket => {
+        const reconnect = () => handleSocketReconnection(socket);
         socket.setTimeout(RETRY_INTERVAL);
-        socket.on('connect', onConnect);
         socket.on('timeout', reconnect);
         socket.on('error', reconnect);
-        socket.connect(PORT, SERVER_IP);
+    };
+    const tryConnect = () => {
+        const socket = testServerConnection(interaction);
+        retryServerConnection(socket);
     }
+
     tryConnect();
 }
 const onReady = () => {
@@ -79,6 +92,18 @@ const stopServer = async interaction => {
         console.error(`Error sending stop command: ${error}`);
     }
 }
+const checkServer = async interaction => {
+    await interaction.reply('Checking server connection...');
+    const socket = testServerConnection(interaction);
+
+    const onException = () => {
+        socket.destroy();
+        interaction.followUp('Fail to connect to server.');
+    };
+
+    socket.on('timeout', onException);
+    socket.on('error', onException);
+}
 const handleInteractions = async interaction => {
     if (!interaction.isCommand()) return;
     const { commandName } = interaction;
@@ -88,6 +113,9 @@ const handleInteractions = async interaction => {
             break;
         case 'stopserver':
             await stopServer(interaction);
+            break;
+        case 'checkserver':
+            await checkServer(interaction);
             break;
         default:
             interaction.reply('Unknown command!');
