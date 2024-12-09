@@ -11,4 +11,4 @@ const constants = {
   MAX_RETRIES, TMUX_SESSION, START_SERVER_SCRIPT_PATH,
 };
 
-export default constants;
+module.exports = constants;

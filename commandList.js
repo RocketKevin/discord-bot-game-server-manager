@@ -9,4 +9,4 @@ const commands = [
   },
 ];
 
-export default commands;
+module.exports = commands;
