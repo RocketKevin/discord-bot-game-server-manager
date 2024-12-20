@@ -20,7 +20,7 @@ const promptUser = () => {
     const selectedCommand = (() => {
       switch (choice) {
         case 1:
-          return 'node ./Scripts/deploy-command.js';
+          return 'node ./Scripts/deploy-commands.js';
         case 2:
           return 'node ./Scripts/bot.js';
         default:
