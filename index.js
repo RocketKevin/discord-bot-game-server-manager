@@ -29,9 +29,8 @@ const promptUser = () => {
           console.log(response);
         } catch (error) {
           console.error(`Error running script: ${error}`);
-        } finally {
-          terminalListener.close();
         }
+        break;
       case 2:
         selectedCommand = 'node ./Scripts/bot.js';
         console.log('Bot Running...');
@@ -42,16 +41,16 @@ const promptUser = () => {
           await execCommand(stopCommand);
         } catch (error) {
           console.error(`Error running script: ${error}`);
-        } finally {
-          terminalListener.close();
         }
+        break;
       case 3:
         console.log('Exiting ...');
-        terminalListener.close();
+        break;
       default:
         console.log('Invalid choice!');
         return promptUser()
     }
+    terminalListener.close();
   }
   terminalListener.question(myQuestion, userAnswer);
 }
