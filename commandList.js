@@ -2,6 +2,14 @@ const commands = [
   {
       name: 'startserver',
       description: 'Starts the server',
+      options: [
+        {
+          name: 'serverName',
+          type: 3,
+          description: "The Server's Name",
+          required: true,
+        },
+      ],
   },
   {
       name: 'stopserver',

@@ -4,7 +4,7 @@ const net = require('net');
 require('dotenv').config();
 const {
     SERVER_IP, PORT, RETRY_INTERVAL,
-    MAX_RETRIES, TMUX_SESSION, START_SERVER_SCRIPT_PATH,
+    MAX_RETRIES, TMUX_SESSION, SERVER_PATH_MAP,
 } = require('./botConfigs.js');
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
@@ -58,9 +58,13 @@ const onReady = () => {
     console.log(`Logged in as ${client.user.tag}!`);
 }
 
-const startServer = async interaction => {
-    await interaction.reply('Starting the server...');
-    const startCommand = `tmux new-session -d -s ${TMUX_SESSION} 'bash ${START_SERVER_SCRIPT_PATH}'`;
+const startServer = async (interaction, serverName) => {
+    await interaction.reply(`Starting ${serverName} server...`);
+    const serverPath = SERVER_PATH_MAP[serverName];
+    if (serverPath === undefined) {
+        return interaction.followUp('No Server Found!');
+    }
+    const startCommand = `tmux new-session -d -s ${TMUX_SESSION} 'bash ${serverPath}'`;
     try {
         await execCommand(startCommand);
         interaction.followUp('Server is starting! 🚀 Checking for connection...');
@@ -109,7 +113,8 @@ const handleInteractions = async interaction => {
     const { commandName } = interaction;
     switch (commandName) {
         case 'startserver':
-            await startServer(interaction);
+            const serverName = interaction.options.getString('serverName');
+            await startServer(interaction, serverName);
             break;
         case 'stopserver':
             await stopServer(interaction);
