@@ -1,6 +1,6 @@
 const { REST, Routes } = require('discord.js');
 require('dotenv').config();
-const commands = require('./commandList.js');
+const commands = require('../Setting/commandList.js');
 
 const { BOT_TOKEN, CLIENT_ID } = process.env;
 

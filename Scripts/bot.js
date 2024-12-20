@@ -1,23 +1,14 @@
 const { Client, GatewayIntentBits } = require('discord.js');
-const { exec } = require('child_process');
 const net = require('net');
 require('dotenv').config();
 const {
     SERVER_IP, PORT, RETRY_INTERVAL,
     MAX_RETRIES, TMUX_SESSION, SERVER_PATH_MAP,
-} = require('./botConfigs.js');
+} = require('../Setting/botConfigs.js');
+const execCommand = require('../Utils/execCommand.js');
 
 const client = new Client({ intents: [GatewayIntentBits.Guilds] });
 
-const execCommand = command => {
-    const handleCommandResult = (resolve, reject) => (error, stdout, stderr) => {
-        if (error) reject(stderr || error.message);
-        else resolve(stdout.trim());
-    };
-    const runCommand = (resolve, reject) => exec(command, handleCommandResult  (resolve, reject));
-    const commandPromise = new Promise(runCommand );
-    return commandPromise;
-};
 const testServerConnection = interaction => {
     const socket = new net.Socket();
 
