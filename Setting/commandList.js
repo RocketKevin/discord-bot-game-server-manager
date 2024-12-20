@@ -1,3 +1,5 @@
+const { ApplicationCommandOptionType } = require('discord.js');
+
 const commands = [
   {
       name: 'startserver',
@@ -5,8 +7,8 @@ const commands = [
       options: [
         {
           name: 'serverName',
-          type: 3,
           description: "The Server's Name",
+          type: ApplicationCommandOptionType.String,
           required: true,
         },
       ],
