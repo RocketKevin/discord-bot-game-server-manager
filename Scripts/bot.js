@@ -1,6 +1,6 @@
 const { Client, GatewayIntentBits } = require('discord.js');
 const net = require('net');
-require('dotenv').config();
+require('dotenv').config({ path: '../.env' });
 const {
     SERVER_IP, PORT, RETRY_INTERVAL,
     MAX_RETRIES, TMUX_SESSION, SERVER_PATH_MAP,
