@@ -6,7 +6,7 @@ require('dotenv').config();
 const { stdin: input, stdout: output } = process;
 const terminalListener = readline.createInterface({ input, output });
 
-const optionList = ['Update Commands', 'Run Discord Bot', 'Exit'];
+const optionList = ['Update Commands', 'Force Delete Commands', 'Run Discord Bot', 'Exit'];
 const displayOptions = (option, index) => {
   console.log(`${index + 1}. ${option}`);
 }
@@ -32,6 +32,15 @@ const promptUser = () => {
         }
         break;
       case 2:
+        selectedCommand = 'node ./Scripts/delete-commands.js';
+        try {
+          const response = await execCommand(selectedCommand);
+          console.log(response);
+        } catch (error) {
+          console.error(`Error running script: ${error}`);
+        }
+        break;
+      case 3:
         console.log('Bot Running...');
         try {
           const botTmuxCommand = `tmux new-session -d -s DiscordBot 'bash ${selectedCommand}'`;
@@ -45,7 +54,7 @@ const promptUser = () => {
           console.error(`Error running script: ${error}`);
         }
         break;
-      case 3:
+      case 4:
         console.log('Exiting ...');
         break;
       default:
