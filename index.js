@@ -1,6 +1,8 @@
 const readline = require('readline');
 const execCommand = require('./Utils/execCommand.js');
 
+require('dotenv').config();
+
 const { stdin: input, stdout: output } = process;
 const terminalListener = readline.createInterface({ input, output });
 
@@ -17,33 +19,37 @@ const promptUser = () => {
   const myQuestion = 'Enter the number of your choice: ';
   const userAnswer = async answer => {
     const choice = parseInt(answer, 10);
-    const selectedCommand = (() => {
-      switch (choice) {
-        case 1:
-          return 'node ./Scripts/deploy-commands.js';
-        case 2:
-          return 'node ./Scripts/bot.js';
-        case 3:
-          return 'close';
-        default:
-          console.log('Invalid choice!');
-          return '';
-      }
-    })();
-    if (selectedCommand === '') return promptUser();
-    if (selectedCommand === 'close') {
-      console.log('Exiting ...');
-      return terminalListener.close();
-    }
-  
+    let selectedCommand = '';
     console.log(`You selected: ${optionList[choice - 1]}`);
-    try {
-      const response = await execCommand(selectedCommand);
-      console.log(response);
-    } catch (error) {
-      console.error(`Error running script: ${error}`);
+    switch (choice) {
+      case 1:
+        selectedCommand = 'node ./Scripts/deploy-commands.js';
+        try {
+          const response = await execCommand(selectedCommand);
+          console.log(response);
+        } catch (error) {
+          console.error(`Error running script: ${error}`);
+        }
+        terminalListener.close();
+      case 2:
+        selectedCommand = 'node ./Scripts/bot.js';
+        console.log('Bot Running...');
+        try {
+          const botTmuxCommand = `tmux new-session -d -s DiscordBot 'bash ${selectedCommand}'`;
+          await execCommand(botTmuxCommand);
+          const stopCommand = `tmux send-keys -t DiscordBot "exit" Enter`;
+          await execCommand(stopCommand);
+        } catch (error) {
+          console.error(`Error running script: ${error}`);
+        }
+        terminalListener.close();
+      case 3:
+        console.log('Exiting ...');
+        terminalListener.close();
+      default:
+        console.log('Invalid choice!');
+        return promptUser()
     }
-    terminalListener.close();
   }
   terminalListener.question(myQuestion, userAnswer);
 }

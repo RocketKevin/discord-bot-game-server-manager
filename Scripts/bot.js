@@ -46,7 +46,7 @@ const testServerConnectionWithRetry = interaction => {
     tryConnect();
 }
 const onReady = () => {
-    console.log(`Logged in as ${client.user.tag}!`);
+    console.log('Bot Online!');
 }
 
 const startServer = async (interaction, serverName) => {
@@ -118,6 +118,12 @@ const handleInteractions = async interaction => {
     }
 }
 
-client.once('ready', onReady);
-client.on('interactionCreate', handleInteractions);
-client.login(process.env.BOT_TOKEN);
+(async () => {
+    try {
+        await client.login(process.env.BOT_TOKEN);
+        client.once('ready', onReady);
+        client.on('interactionCreate', handleInteractions);
+    } catch (error) {
+        console.error(error);
+    }
+})();
