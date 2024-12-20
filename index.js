@@ -29,8 +29,9 @@ const promptUser = () => {
           console.log(response);
         } catch (error) {
           console.error(`Error running script: ${error}`);
+        } finally {
+          terminalListener.close();
         }
-        terminalListener.close();
       case 2:
         selectedCommand = 'node ./Scripts/bot.js';
         console.log('Bot Running...');
@@ -41,8 +42,9 @@ const promptUser = () => {
           await execCommand(stopCommand);
         } catch (error) {
           console.error(`Error running script: ${error}`);
+        } finally {
+          terminalListener.close();
         }
-        terminalListener.close();
       case 3:
         console.log('Exiting ...');
         terminalListener.close();
