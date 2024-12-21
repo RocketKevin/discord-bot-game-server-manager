@@ -19,13 +19,8 @@ const testServerConnection = interaction => {
     socket.end();
     interaction.followUp('Server is up');
   };
-  const onSocketError = () => {
-    socket.end();
-    interaction.followUp('Error. Server Closing...');
-  };
 
   socket.on('connect', onSocketConnection);
-  socket.on('error', onSocketError);
   socket.connect(PORT, SERVER_IP);
 
   return socket;
