@@ -113,7 +113,7 @@ const handleInteractions = async interaction => {
   const { commandName } = interaction;
   switch (commandName) {
     case 'startserver':
-      const serverName = interaction.options.getString('serverName', true);
+      const serverName = interaction.options.get('ServerName').value
       await startServer(interaction, serverName);
       break;
     case 'stopserver':
