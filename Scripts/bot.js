@@ -25,21 +25,21 @@ const testServerConnection = interaction => {
 
   return socket;
 };
-const testServerConnectionWithRetry = interaction => {
+const testServerConnectionWithRetry = async interaction => {
   let attempt = 0;
 
-  interaction.followUp('Checking for connection...');
+  const followUpMessage = await interaction.followUp('Checking for connection...');
 
-  const handleSocketReconnection = socket => {
+  const handleSocketReconnection = async socket => {
     socket.destroy();
     attempt++;
     const currentTime = new Date();
     const hours = currentTime.getHours();
     const minutes = currentTime.getMinutes();
     const seconds = currentTime.getSeconds();
-    interaction.editReply(`${hours}:${minutes}:${seconds} - Server is not reachable`);
+    await followUpMessage.edit(`${hours}:${minutes}:${seconds} - Server is not reachable`);
     if (attempt < MAX_RETRIES) setTimeout(tryConnect, RETRY_INTERVAL);
-    else interaction.editReply('Maximum retries reached. Server is not reachable.');
+    else await followUpMessage.edit('Maximum retries reached. Server is not reachable.');
   };
   const retryServerConnection = socket => {
     const reconnect = () => handleSocketReconnection(socket);
