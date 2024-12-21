@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits } = require('discord.js');
-const net = require('net');
+const { Socket } = require('net');
 require('dotenv').config({ path: '../.env' });
 const {
   SERVER_IP, PORT, RETRY_INTERVAL,
@@ -9,13 +9,11 @@ const execCommand = require('../Utils/execCommand.js');
 
 const intents = [
   GatewayIntentBits.Guilds,
-  GatewayIntentBits.GuildMessages,
-  GatewayIntentBits.MessageContent,
 ]
 const client = new Client({ intents });
 
 const testServerConnection = interaction => {
-  const socket = new net.Socket();
+  const socket = new Socket();
 
   const onSocketConnection = () => {
     socket.end();
