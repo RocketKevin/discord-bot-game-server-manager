@@ -6,7 +6,7 @@ const commands = [
     .setDescription('Starts the server')
     .addStringOption((option) =>
       option
-        .setName('servername')
+        .setName('ServerName')
         .setDescription("The Server's Name")
         .setRequired(true)
     ),
