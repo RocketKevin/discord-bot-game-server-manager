@@ -43,9 +43,9 @@ const promptUser = () => {
       case 3:
         console.log('Bot Running...');
         try {
-          const botTmuxCommand = `tmux new-session -d -s DiscordBot 'bash ${selectedCommand}'`;
-          await execCommand(botTmuxCommand);
           selectedCommand = 'node ./Scripts/bot.js';
+          const botTmuxCommand = 'tmux new-session -d -s DiscordBot';
+          await execCommand(botTmuxCommand);
           const botTmuxRunCommand = `tmux send-keys -t DiscordBot "${selectedCommand}" Enter`;
           await execCommand(botTmuxRunCommand);
           const stopCommand = 'tmux send-keys -t DiscordBot "exit" Enter';
