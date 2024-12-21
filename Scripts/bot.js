@@ -28,12 +28,18 @@ const testServerConnection = interaction => {
 const testServerConnectionWithRetry = interaction => {
   let attempt = 0;
 
+  interaction.followUp('Checking for connection...');
+
   const handleSocketReconnection = socket => {
     socket.destroy();
     attempt++;
-    interaction.followUp(`Attempt ${attempt} failed. Retrying in ${RETRY_INTERVAL / 1000} seconds...`);
+    const currentTime = new Date();
+    const hours = currentTime.getHours();
+    const minutes = currentTime.getMinutes();
+    const seconds = currentTime.getSeconds();
+    interaction.editReply(`${hours}:${minutes}:${seconds} - Server is not reachable`);
     if (attempt < MAX_RETRIES) setTimeout(tryConnect, RETRY_INTERVAL);
-    else interaction.followUp('Maximum retries reached. Server is not reachable.');
+    else interaction.editReply('Maximum retries reached. Server is not reachable.');
   };
   const retryServerConnection = socket => {
     const reconnect = () => handleSocketReconnection(socket);
@@ -62,7 +68,7 @@ const startServer = async (interaction, serverName) => {
   const startCommand = `tmux new-session -d -s ${TMUX_SESSION} 'bash ${serverPath}'`;
   try {
     await execCommand(startCommand);
-    interaction.followUp('Server is starting! 🚀 Checking for connection...');
+    interaction.followUp('Server is starting!');
     testServerConnectionWithRetry(interaction);
   } catch (error) {
     interaction.followUp('Failed to start the server. Please check the logs for details.');
