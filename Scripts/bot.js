@@ -27,17 +27,30 @@ const testServerConnection = interaction => {
 };
 const testServerConnectionWithRetry = async interaction => {
   let attempt = 0;
+  let timer = 0;
 
   const followUpMessage = await interaction.followUp('Checking for connection...');
 
   const handleSocketReconnection = async socket => {
     socket.destroy();
     attempt++;
-    const currentTime = new Date();
-    const hours = currentTime.getHours();
-    const minutes = currentTime.getMinutes();
-    const seconds = currentTime.getSeconds();
-    await followUpMessage.edit(`${hours}:${minutes}:${seconds} - Server is not reachable`);
+    timer += RETRY_INTERVAL / 1000;
+    const formatTimer = (() => {
+      const minutes = Math.floor(timer / 60);
+      const remainingSeconds = timer % 60;
+    
+      let timeString = '';
+      if (minutes > 0) {
+        timeString += `${minutes} minute${minutes > 1 ? 's' : ''}`;
+      }
+      if (remainingSeconds > 0) {
+        if (timeString) timeString += ' ';
+        timeString += `${remainingSeconds} second${remainingSeconds > 1 ? 's' : ''}`;
+      }
+    
+      return timeString;
+    })();
+    await followUpMessage.edit(`${formatTimer} - Server is not reachable`);
     if (attempt < MAX_RETRIES) setTimeout(tryConnect, RETRY_INTERVAL);
     else await followUpMessage.edit('Maximum retries reached. Server is not reachable.');
   };
