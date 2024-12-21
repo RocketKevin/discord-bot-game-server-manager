@@ -1,26 +1,23 @@
-const { ApplicationCommandOptionType } = require('discord.js');
+const { SlashCommandBuilder } = require('discord.js');
 
 const commands = [
-  {
-    name: 'startserver',
-    description: 'Starts the server',
-    options: [
-      {
-        name: 'serverName',
-        description: "The Server's Name",
-        type: ApplicationCommandOptionType.String,
-        required: true,
-      },
-    ],
-  },
-  {
-    name: 'stopserver',
-    description: 'Stops the server',
-  },
-  {
-    name: 'checkserver',
-    description: 'Checks if the server is online',
-  },
+  new SlashCommandBuilder()
+    .setName('startserver')
+    .setDescription('Starts the server')
+    .addStringOption((option) =>
+      option
+        .setName('servername')
+        .setDescription("The Server's Name")
+        .setRequired(true)
+    ),
+
+  new SlashCommandBuilder()
+    .setName('stopserver')
+    .setDescription('Stops the server'),
+
+  new SlashCommandBuilder()
+    .setName('checkserver')
+    .setDescription('Checks if the server is online'),
 ];
 
 module.exports = commands;
