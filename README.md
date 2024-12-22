@@ -1,6 +1,6 @@
 # Discord Bot Game Server Manager
 
-A Discord bot built with JavaScript to manage game servers directly from your Discord server.
+A Discord bot built with JavaScript to manage game server directly from your Discord server.
 
 ## Features
 
