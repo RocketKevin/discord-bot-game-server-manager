@@ -33,8 +33,10 @@ const testServerConnectionWithRetry = async interaction => {
 
   const handleSocketReconnection = async socket => {
     socket.destroy();
+
     attempt++;
     timer += RETRY_INTERVAL / 1000;
+
     const formatTimer = (() => {
       const minutes = Math.floor(timer / 60);
       const remainingSeconds = timer % 60;
@@ -51,11 +53,13 @@ const testServerConnectionWithRetry = async interaction => {
       return timeString;
     })();
     await followUpMessage.edit(`${formatTimer} - Server is not reachable`);
+
     if (attempt < MAX_RETRIES) setTimeout(tryConnect, RETRY_INTERVAL);
     else await followUpMessage.edit('Maximum retries reached. Server is not reachable.');
   };
   const retryServerConnection = socket => {
     const reconnect = () => handleSocketReconnection(socket);
+
     socket.setTimeout(RETRY_INTERVAL);
     socket.on('timeout', reconnect);
     socket.on('error', reconnect);
@@ -67,21 +71,23 @@ const testServerConnectionWithRetry = async interaction => {
 
   tryConnect();
 }
-const onReady = () => {
-  console.log('Bot Online!');
-}
+const onReady = () => console.log('Bot Online!');
 
 const startServer = async (interaction, serverName) => {
   await interaction.reply(`Starting ${serverName} server...`);
+  
   const serverPath = SERVER_PATH_MAP[serverName];
   if (serverPath === undefined) {
     interaction.followUp('No Server Found!');
     return;
   }
-  const startCommand = `tmux new-session -d -s ${TMUX_SESSION} 'bash ${serverPath}'`;
+  
   try {
+    const startCommand = `tmux new-session -d -s ${TMUX_SESSION} 'bash ${serverPath}'`;
     await execCommand(startCommand);
+
     interaction.followUp('Server is starting!');
+
     testServerConnectionWithRetry(interaction);
   } catch (error) {
     interaction.followUp('Failed to start the server. Please check the logs for details.');
@@ -89,9 +95,10 @@ const startServer = async (interaction, serverName) => {
   }
 }
 const forceCloseServer = async interaction => {
-  const ctrlCCommand = `tmux send-keys -t ${TMUX_SESSION} C-c`;
   try {
+    const ctrlCCommand = `tmux send-keys -t ${TMUX_SESSION} C-c`;
     await execCommand(ctrlCCommand);
+
     interaction.followUp('Server has been stopped successfully. 👌');
   } catch (error) {
     interaction.followUp('Failed to terminate the server session.');
@@ -99,12 +106,13 @@ const forceCloseServer = async interaction => {
   }
 }
 const stopServer = async interaction => {
-  await interaction.reply('Stopping the server...');
-  const stopCommand = `tmux send-keys -t ${TMUX_SESSION} "stop" Enter`;
-  const forceCloseServerHelper = () => forceCloseServer(interaction);
   try {
+    await interaction.reply('Stopping the server...');
+
+    const stopCommand = `tmux send-keys -t ${TMUX_SESSION} "stop" Enter`;
     await execCommand(stopCommand);
-    setTimeout(forceCloseServerHelper, 5000);
+
+    setTimeout(() => forceCloseServer(interaction), 5000);
   } catch (error) {
     interaction.followUp('Failed to send stop command to the server.');
     console.error(`Error sending stop command: ${error}`);
