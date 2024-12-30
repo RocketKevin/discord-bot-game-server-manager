@@ -1,3 +1,7 @@
+const execCommand = require('./Utils/execCommand.js');
+
+require('dotenv').config();
+
 (async () => {
   try {
     const deployCommand = 'node ./Scripts/deploy-commands.js';
