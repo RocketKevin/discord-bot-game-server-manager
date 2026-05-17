@@ -344,6 +344,10 @@ const addServer = async (interaction) => {
   const port = interaction.options.getInteger('port') || 25565;
   const config = readConfig();
 
+  if (path.startsWith('~')) {
+    return interaction.reply({ embeds: [embed(COLORS.red, '❌ Invalid Path', `Do not use \`~\` in the path — tmux won't expand it.\nUse the full path instead, e.g. \`/home/sorrowsea/Servers/ATM10/startserver.sh\``)], ephemeral: true });
+  }
+
   if (config.SERVER_PATH_MAP[name]) {
     return interaction.reply({ embeds: [embed(COLORS.yellow, '⚠️ Already Exists', `A server named \`${name}\` is already registered. Remove it first with \`/removeserver\`.`)], ephemeral: true });
   }
