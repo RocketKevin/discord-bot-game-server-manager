@@ -94,8 +94,8 @@ const startServer = async (interaction, serverName) => {
   await interaction.reply({ embeds: [embed(COLORS.blue, '🚀 Starting Server...', `Starting \`${serverName}\`...`)] });
 
   try {
-    await execCommand(`tmux kill-session -t ${config.TMUX_SESSION} 2>/dev/null || true`);
-    await execCommand(`tmux new-session -d -s ${config.TMUX_SESSION} 'bash "${serverPath}"'`);
+    await execCommand(`tmux kill-session -t ${serverName} 2>/dev/null || true`);
+    await execCommand(`tmux new-session -d -s ${serverName} 'bash "${serverPath}"'`);
     await interaction.followUp({ embeds: [embed(COLORS.yellow, '⏳ Server Starting', 'The server process has started. Waiting for it to come online...')] });
     waitForServer(interaction, config.SERVER_IP, port || config.PORT);
   } catch (error) {
@@ -104,21 +104,27 @@ const startServer = async (interaction, serverName) => {
   }
 };
 
-const stopServer = async (interaction) => {
+const stopServer = async (interaction, serverName) => {
   if (!hasPermission(interaction)) {
     return interaction.reply({ embeds: [embed(COLORS.red, '🚫 Permission Denied', 'You do not have permission to stop the server.')], ephemeral: true });
   }
 
   const config = readConfig();
-  await interaction.reply({ embeds: [embed(COLORS.yellow, '🛑 Stopping Server...', 'Sending stop command...')] });
+  const serverEntry = config.SERVER_PATH_MAP[serverName];
+
+  if (!serverEntry) {
+    return interaction.reply({ embeds: [embed(COLORS.red, '❌ Unknown Server', `No server named \`${serverName}\` found. Use \`/listservers\` to see available servers.`)], ephemeral: true });
+  }
+
+  await interaction.reply({ embeds: [embed(COLORS.yellow, '🛑 Stopping Server...', `Stopping \`${serverName}\`...`)] });
 
   try {
-    await execCommand(`tmux send-keys -t ${config.TMUX_SESSION} "stop" Enter`);
+    await execCommand(`tmux send-keys -t ${serverName} "stop" Enter`);
     setTimeout(async () => {
       try {
-        await execCommand(`tmux send-keys -t ${config.TMUX_SESSION} C-c`);
-        await execCommand(`tmux kill-session -t ${config.TMUX_SESSION} 2>/dev/null || true`);
-        interaction.followUp({ embeds: [embed(COLORS.green, '✅ Server Stopped', 'The server has been shut down.')] });
+        await execCommand(`tmux send-keys -t ${serverName} C-c`);
+        await execCommand(`tmux kill-session -t ${serverName} 2>/dev/null || true`);
+        interaction.followUp({ embeds: [embed(COLORS.green, '✅ Server Stopped', `\`${serverName}\` has been shut down.`)] });
       } catch (error) {
         interaction.followUp({ embeds: [embed(COLORS.red, '❌ Stop Failed', `Could not force-stop server: \`${error}\``)] });
       }
@@ -142,14 +148,14 @@ const restartServer = async (interaction, serverName) => {
   }
 
   const { path: serverPath, port } = serverEntry;
-  await interaction.reply({ embeds: [embed(COLORS.yellow, '🔁 Restarting Server...', 'Stopping the server first...')] });
+  await interaction.reply({ embeds: [embed(COLORS.yellow, '🔁 Restarting Server...', `Stopping \`${serverName}\` first...`)] });
 
   try {
-    await execCommand(`tmux send-keys -t ${config.TMUX_SESSION} "stop" Enter`);
+    await execCommand(`tmux send-keys -t ${serverName} "stop" Enter`);
     setTimeout(async () => {
       try {
-        await execCommand(`tmux kill-session -t ${config.TMUX_SESSION} 2>/dev/null || true`);
-        await execCommand(`tmux new-session -d -s ${config.TMUX_SESSION} 'bash "${serverPath}"'`);
+        await execCommand(`tmux kill-session -t ${serverName} 2>/dev/null || true`);
+        await execCommand(`tmux new-session -d -s ${serverName} 'bash "${serverPath}"'`);
         await interaction.followUp({ embeds: [embed(COLORS.blue, '🚀 Server Restarting', 'Server stopped and is starting back up...')] });
         waitForServer(interaction, config.SERVER_IP, port || config.PORT);
       } catch (error) {
@@ -390,7 +396,7 @@ const handleInteractions = async (interaction) => {
   try {
     switch (commandName) {
       case 'startserver':   await startServer(interaction, interaction.options.getString('server-name')); break;
-      case 'stopserver':    await stopServer(interaction); break;
+      case 'stopserver':    await stopServer(interaction, interaction.options.getString('server-name')); break;
       case 'restartserver': await restartServer(interaction, interaction.options.getString('server-name')); break;
       case 'checkserver':   await checkServer(interaction, interaction.options.getString('server-name')); break;
       case 'addrole':       await addRole(interaction); break;

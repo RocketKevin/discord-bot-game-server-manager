@@ -4,7 +4,6 @@
   "TIMEOUT": 120000,
   "RETRY_INTERVAL": 10000,
   "MAX_RETRIES": 12,
-  "TMUX_SESSION": "GameServer",
   "ALLOWED_ROLES": [],
   "SERVER_PATH_MAP": {}
 }

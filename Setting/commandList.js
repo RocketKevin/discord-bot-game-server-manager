@@ -14,7 +14,13 @@ const commands = [
 
   new SlashCommandBuilder()
     .setName('stopserver')
-    .setDescription('Gracefully stops the running game server'),
+    .setDescription('Gracefully stops the running game server')
+    .addStringOption((option) =>
+      option
+        .setName('server-name')
+        .setDescription("The server's name (e.g. ATM10)")
+        .setRequired(true)
+    ),
 
   new SlashCommandBuilder()
     .setName('restartserver')
